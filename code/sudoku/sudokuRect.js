@@ -1,0 +1,43 @@
+"use strict";
+class Rect {
+  constructor(row, column) {
+    this.row = row;
+    this.column = column;
+    this._numbersToChoose = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    this.choosenNumber = 0;
+  }
+  drawNumber(correction = 0) {
+    // if correction algorithm pass a corerction number to choose
+    if (correction != 0) {
+      const index = this._numbersToChoose.indexOf(correction);
+      this.choosenNumber = correction;
+      this.removeNumber(correction);
+      return { number: this.choosenNumber, index };
+    } else {
+      // standard sytuation
+      const length = this._numbersToChoose.length;
+      const index = Math.floor(Math.random() * length);
+      this.choosenNumber = this._numbersToChoose[index]
+        ? this._numbersToChoose[index]
+        : 0;
+      this.removeNumber(this.choosenNumber);
+      return { number: this.choosenNumber, index };
+    }
+  }
+  removeNumber(number) {
+    const index = this.numbersToChoose.indexOf(number);
+    index != -1 ? this.numbersToChoose.splice(index, 1) : null;
+  }
+
+  // getters
+  get number() {
+    return this.choosenNumber;
+  }
+  get numbersToChoose() {
+    return this._numbersToChoose;
+  }
+  set numbersToChoose(numbers = []) {
+    this._numbersToChoose = numbers;
+  }
+}
+export default Rect;
