@@ -1,14 +1,13 @@
 import Sudoku from "./sudoku/sudoku.js";
 const sd = new Sudoku();
-
-document.getElementById("btn").addEventListener("click", (e) => {
+const benchmark = (repetitions = 100) => {
   let countSum = 0;
   let deltaSum = 0;
   let minTime = 0;
   let maxTime = 0;
   let minIter = 0;
   let maxIter = 0;
-  const iterations = 1000;
+  const iterations = repetitions;
   for (let i = 0; i < iterations; i++) {
     const t1 = new Date().getTime();
     const count = sd.generateSudoku();
@@ -48,5 +47,12 @@ document.getElementById("btn").addEventListener("click", (e) => {
   console.log(`Maksymalna ilość powtórzeń: ${maxIter}`);
   console.log(`Minimalna ilość powtórzeń: ${minIter}`);
   console.log(" ");
+};
+document.getElementById("btn").addEventListener("click", (e) => {
+  //benchmark(100);
+  //console.log(sd.sudoku);
+
+  const sudoku = sd.generateSudoku(2);
+  console.log(sudoku);
 });
 //console.log(sd.sudokNumbers);

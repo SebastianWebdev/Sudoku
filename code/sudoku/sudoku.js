@@ -2,11 +2,37 @@
 import Rect from "./sudokuRect.js";
 class Sudoku {
   #sudokuArray = [];
-  flag = false;
-  constructor() {
-    this.#sudokuArray = this.initializeSudoku();
-  }
+  #sudokuToSolve = [];
+  #difficultySettings = {
+    1: {
+      min: 18,
+      max: 22,
+    },
+    2: {
+      min: 23,
+      max: 28,
+    },
+    3: {
+      min: 29,
+      max: 36,
+    },
+    4: {
+      min: 52,
+      max: 70,
+    },
+    5: { min: 60, max: 80 },
+  };
+  #flag = false;
+  difficulty = 1;
+  constructor(settings = { autoGenerate: true }) {
+    const { autoGenerate } = settings;
 
+    this.#sudokuArray = this.initializeSudoku();
+    if (autoGenerate) {
+      this.generateSudoku();
+    }
+  }
+  // private methods
   initializeSudoku() {
     // creating sudoku array with init values
     const sudoku = [];
@@ -21,8 +47,6 @@ class Sudoku {
   }
   eliminateNumbersToChoose(number, row, col, sudoku = []) {
     //Eliminate numbers in Row
-    // console.log(row);
-    //console.log(sudoku);
 
     for (let i = col + 1; i < 9; i++) {
       sudoku[row][i].removeNumber(number);
@@ -64,32 +88,12 @@ class Sudoku {
         (number) => corespondingNumbers.indexOf(number) === -1
       );
       const choosedNumber = testNumbers.length > 0 ? testNumbers[0] : 0;
-
-      /*console.log(numbersToCheck);
-      console.log(corespondingNumbers);
-
-      console.log(choosedNumber);
-      console.log(row);
-      console.log("--------------------------------------------------");*/
       return choosedNumber;
     }
     return 0;
   }
-  checkSudoku(sudoku = []) {
-    const sudokuNumbers = this.getSudokuNumbers([...sudoku]);
-    let sudokuSum = 0;
-    sudokuNumbers.forEach((row) => {
-      row.forEach((number) => {
-        sudokuSum += number;
-      });
-    });
-    if (sudokuSum === 405) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-  createSudoku() {
+
+  createSingleSudoku() {
     const sudoku = this.initializeSudoku();
     sudoku.forEach((row) => {
       row.forEach((rect) => {
@@ -106,25 +110,51 @@ class Sudoku {
     });
     return sudoku;
   }
-  generateSudoku() {
-    this.flag = false;
-    let index = 0;
-    while (!this.flag && index < 10000) {
-      const tempSudoku = this.createSudoku();
-      const flag = this.checkSudoku(tempSudoku);
-      if (flag) {
-        this.#sudokuArray = tempSudoku;
-        this.flag = flag;
-        // console.log(index);
-        //console.log(this.getSudokuNumbers(tempSudoku));
-        return index;
-      }
-      index++;
+  createSudokuToSolve(difficulty = this.difficulty, sudokuArray = []) {
+    const sudoku = this.createCopy(sudokuArray);
+    const indexes = [];
+    sudoku.forEach((item) => {
+      item.forEach((rect) => {
+        indexes.push({
+          row: rect.row,
+          column: rect.column,
+        });
+      });
+    });
+    const removedItems = [];
+    const amountOfNumbersToEliminate = this.difficultySettings;
+    const numbersCount =
+      Math.floor(
+        Math.random() *
+          (amountOfNumbersToEliminate[difficulty].max -
+            amountOfNumbersToEliminate[difficulty].min)
+      ) + amountOfNumbersToEliminate[difficulty].min;
+
+    for (let i = 0; i < 81 - numbersCount; i++) {
+      const index = Math.floor(Math.random() * indexes.length);
+
+      const rect = indexes[index];
+      sudoku[rect.row][rect.column].choosenNumber = 0;
+      indexes.splice(index, 1);
+      removedItems.push(rect);
     }
-    //this.#sudokuArray = this.createSudoku();
-    //const flag = this.checkSudoku([...this.#sudokuArray]);
-    //console.log(flag);
-    //console.log(this.getSudokuNumbers(this.#sudokuArray));
+    this.#sudokuToSolve = sudoku;
+    return sudoku;
+  }
+  createCopy(sudoku = []) {
+    const copy = [];
+    sudoku.forEach((row) => {
+      const newRow = [];
+      row.forEach((rect) => {
+        const { row, column, choosenNumber, numbersToChoose } = rect;
+        const newRect = new Rect(row, column);
+        newRect.setChoosenNumber = choosenNumber;
+        newRect.setNumbersToChoose = [...numbersToChoose];
+        newRow.push(newRect);
+      });
+      copy.push(newRow);
+    });
+    return copy;
   }
   getSudokuNumbers(sudoku = []) {
     const sudokuNumbersArr = [];
@@ -137,25 +167,71 @@ class Sudoku {
     });
     return sudokuNumbersArr;
   }
-  // Getters
-  /*get sudokuNumbers() {
-    const sudokuNumbersArr = [];
-    this.#sudokuArray.forEach((row) => {
-      const newRow = [];
-      row.forEach((rect) => {
-        newRow.push(rect.number);
+  // --------------------------Public methods
+  checkSudoku(sudoku = []) {
+    const sudokuNumbers = this.getSudokuNumbers([...sudoku]);
+    let sudokuSum = 0;
+    sudokuNumbers.forEach((row) => {
+      row.forEach((number) => {
+        sudokuSum += number;
       });
-      sudokuNumbersArr.push(newRow);
     });
-    return sudokuNumbersArr;
-  }*/
-  test() {
-    /* this.#sudokuArray.forEach((row) => {
-      row.forEach((rect) => {
-        console.log(rect);
-      });
-    });*/
+    if (sudokuSum === 405) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  generateSudoku(difficulty = 1) {
+    this.flag = false;
+    let index = 0;
+    let sudoku = [];
+    while (!this.flag && index < 10000) {
+      const tempSudoku = this.createSingleSudoku();
+      const flag = this.checkSudoku(tempSudoku);
+      if (flag) {
+        this.#sudokuArray = tempSudoku;
+        this.#flag = flag;
+        sudoku = tempSudoku;
+        break;
+      }
+      index++;
+    }
+    const sudokuToSolve = this.createSudokuToSolve(difficulty, sudoku);
+    this.#sudokuToSolve = sudokuToSolve;
+
+    return {
+      origin: { sudoku, numbersArr: this.getSudokuNumbers(sudoku) },
+      toSolve: {
+        difficulty,
+        sudoku: sudokuToSolve,
+        numbersArr: this.getSudokuNumbers(sudokuToSolve),
+      },
+    };
+  }
+
+  //getters
+  get sudokuNumbers() {
+    return this.getSudokuNumbers(this.#sudokuArray);
+  }
+  get sudoku() {
+    return this.#sudokuArray;
+  }
+  get sudokuNumbersToSolve() {
+    return this.getSudokuNumbers(this.#sudokuToSolve);
+  }
+  get sudokuToSolve() {
+    return this.#sudokuToSolve;
+  }
+  get difficultySettings() {
+    return this.#difficultySettings;
+  }
+  //setters
+  set difficulty(difficulty = 1) {
+    this.difficulty = difficulty;
+  }
+  set difficultySettings(setings = {}) {
+    this.#difficultySettings = setings;
   }
 }
 export default Sudoku;
-//this.errorCorrection(rect.row, rect.column, sudoku)

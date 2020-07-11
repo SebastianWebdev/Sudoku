@@ -36,8 +36,19 @@ class Rect {
   get numbersToChoose() {
     return this._numbersToChoose;
   }
-  set numbersToChoose(numbers = []) {
+  // setters
+
+  set setNumbersToChoose(numbers = []) {
     this._numbersToChoose = numbers;
+  }
+  set setChoosenNumber(number) {
+    this.choosenNumber = number;
+  }
+  set setRow(row) {
+    this.row = row;
+  }
+  set setColumn(column) {
+    this.column = column;
   }
 }
 export default Rect;
